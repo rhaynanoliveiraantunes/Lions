@@ -5,16 +5,17 @@ const rl = require('readline').createInterface({
 
    let vet = []
 
-rl.question('digite oa quantidade de valores que voce quer inserir no vetor', (valor) => {
+rl.question('digite a quantidade de valores que voce quer inserir no vetor ', (valor) => {
 
    let numero_repeteicao = +valor
    let i = 0
+
 function maiores(){
 
 
     if(numero_repeteicao > i){
 
-    rl.question(`digite o valor da posicao ${i} do vetor `, (valor_vetor) => {
+    rl.question(`digite o valor da posicao ${i+1} do vetor `, (valor_vetor) => {
 
      vet[i] = +valor_vetor
      i++
@@ -32,7 +33,7 @@ function maiores(){
     }
 
     let segundo_maior = -Infinity
-    for(j = 0; j < numero_repeteicao; j++){
+    for( let j = 0; j < numero_repeteicao; j++){
 
         if(vet[j]< maior && vet[j]>segundo_maior){
 
@@ -41,12 +42,18 @@ function maiores(){
     }
 
     console.log("o maior e ", maior)
-    console.log("o segundo maior e ", segundo_maior)
+
+    if(segundo_maior === -Infinity){
+        console.log("todos os numeros sao iguais")
+    }else{
+        console.log("o segundo maior e ", segundo_maior)
+    }
+   
     rl.close();
 }
 
 }
 
-    
+    maiores();
 
 })

@@ -36,8 +36,11 @@ function mostrarMenu() {
     console.log("ALUGUEL")
     console.log("========================")
     console.log("11 - Realizar Aluguel")
+    console.log("12 - Devolver Carro")
+    console.log("13 - Listar Alugueis Todos")
+    console.log("14 - Listar Alugueis Ativos")
+    console.log("15 - Listar Alugueis Finalizados")
     console.log("0 - Sair");
-
 
     rl.question("Escolha uma opção: ", (opcao) => {
         if (opcao === "1") {
@@ -70,12 +73,11 @@ function mostrarMenu() {
             listarAlugueisAtivos();
         } else if (opcao === "15") {
             listarAlugueisFinalizados();
-        }else if (opcao === "0") {
+        } else if (opcao === "0") {
             console.log("saindo")
             rl.close();
         }
     })
-
 }
 
 function listarAlugueisFinalizados() {
@@ -87,7 +89,6 @@ function listarAlugueisFinalizados() {
     }
 
     for (let i = 0; i < alugueis.length; i++) {
-
         if (!alugueis[i].status) {
             console.log("\nID Aluguel: " + alugueis[i].id_aluguel);
             console.log("\nID Cliente: " + alugueis[i].id_cliente);
@@ -95,17 +96,13 @@ function listarAlugueisFinalizados() {
             console.log("Nome: " + alugueis[i].nome)
             console.log("dias: " + alugueis[i].dias)
             console.log("Total: " + alugueis[i].total)
-            if (alugueis[i].status) {
-                console.log("Ativo")
-            } else {
-                console.log("Finalizado")
-            }
+            console.log("Finalizado")
         }
     }
 
     mostrarMenu();
-
 }
+
 function listarAlugueisAtivos() {
 
     if (alugueis.length === 0) {
@@ -115,7 +112,6 @@ function listarAlugueisAtivos() {
     }
 
     for (let i = 0; i < alugueis.length; i++) {
-
         if (alugueis[i].status) {
             console.log("\nID Aluguel: " + alugueis[i].id_aluguel);
             console.log("\nID Cliente: " + alugueis[i].id_cliente);
@@ -123,16 +119,11 @@ function listarAlugueisAtivos() {
             console.log("Nome: " + alugueis[i].nome)
             console.log("dias: " + alugueis[i].dias)
             console.log("Total: " + alugueis[i].total)
-            if (alugueis[i].status) {
-                console.log("Ativo")
-            } else {
-                console.log("Finalizado")
-            }
+            console.log("Ativo")
         }
     }
 
     mostrarMenu();
-
 }
 
 function listarAlugueisTodos() {
@@ -146,7 +137,7 @@ function listarAlugueisTodos() {
     for (let i = 0; i < alugueis.length; i++) {
         console.log("\nID Aluguel: " + alugueis[i].id_aluguel);
         console.log("\nID Cliente: " + alugueis[i].id_cliente);
-        console.log("\nID Carro: " + clientes[i].id_carro);
+        console.log("\nID Carro: " + alugueis[i].id_carro);
         console.log("Nome: " + alugueis[i].nome)
         console.log("dias: " + alugueis[i].dias)
         console.log("Total: " + alugueis[i].total)
@@ -158,33 +149,42 @@ function listarAlugueisTodos() {
     }
 
     mostrarMenu();
-
 }
-
-
 
 function devolverCarro() {
 
     rl.question("Digite o id do Emprestimo que sera devolvido; ", (id_emprestimo) => {
 
-        let aluguel = buscarAluguelPorId(id_emprestimo)
-        let carro = buscarCarroPorId(aluguel.id_carro)
+        id_emprestimo = Number(id_emprestimo)
 
-        if (aluguel === "" || carro === "") {
-            console.log("Aluguel ou carro nao encontrado")
+        let aluguel = buscarAluguelPorId(id_emprestimo)
+
+        if (aluguel === null) {
+            console.log("Aluguel nao encontrado")
+            mostrarMenu();
+            return;
+        }
+
+        let carro = encontrarCarroPorId(aluguel.id_carro)
+
+        if (carro === null) {
+            console.log("Carro nao encontrado")
+            mostrarMenu();
+            return;
         }
 
         aluguel.status = false
-        carro.disponivel = false
+        carro.diponivel = true
 
         console.log("carro devolvido com sucesso")
+        mostrarMenu();
     })
 }
 
-function buscarAluguelPorId() {
+function buscarAluguelPorId(id) {
 
     for (let i = 0; i < alugueis.length; i++) {
-        if (alugueis[i].id === id) {
+        if (alugueis[i].id_aluguel === id) {
             return alugueis[i];
         }
     }
@@ -198,21 +198,23 @@ function realizarAluguel() {
         rl.question("Digite o id do Carro que sera emprestado; ", (id_carro) => {
             rl.question("Digite o total de dias que sera emprestado; ", (dias) => {
 
-                dias = number(dias)
+                dias = Number(dias)
+                id_cliente = Number(id_cliente)
+                id_carro = Number(id_carro)
 
-                let carro = buscarCarroPorId(id_carro)
-                let cliente = buscarClientePorId(id_cliente)
+                let carro = encontrarCarroPorId(id_carro)
+                let cliente = encontrarClientePorId(id_cliente)
 
-                if (carro === '' || cliente === '') {
-
+                if (carro === null || cliente === null) {
                     console.log("carro ou cliente nao encontrado")
-
+                    mostrarMenu();
+                    return;
                 }
 
                 if (carro.diponivel === false) {
-
                     console.log("Carro indisponivel")
-
+                    mostrarMenu();
+                    return;
                 }
 
                 let total = dias * carro.preco_diaria
@@ -220,52 +222,45 @@ function realizarAluguel() {
                 carro.diponivel = false
 
                 let aluguel = {
-
                     id_aluguel: proximoIdAluguel,
-                    id_cliente: proximoIdCliente,
-                    id_carro: proximoIdCarro,
+                    id_cliente: id_cliente,
+                    id_carro: id_carro,
                     dias: dias,
                     total: total,
                     status: true
-                    // true = ativo false = finalizado
-
                 }
+
                 alugueis.push(aluguel)
-
-
+                proximoIdAluguel++
+                console.log("Aluguel realizado com sucesso!")
+                mostrarMenu();
             })
-
         })
-
     })
-
 }
 
 function removerCliente() {
 
     rl.question("Digite o id do Cliente que quer remover; ", (id) => {
 
-        id = number(id)
+        id = Number(id)
 
         for (let i = 0; i < clientes.length; i++) {
-
             if (clientes[i].id === id) {
                 clientes.splice(i, 1);
                 console.log("cliente removido com sucesso");
                 mostrarMenu();
                 return;
             }
-
         }
+
+        console.log("Cliente nao encontrado");
+        mostrarMenu();
     })
-
-
 }
 
-
-
 function atualizarCliente() {
-    console.log(" Cliente Aluno");
+    console.log("Atualizar Cliente");
 
     rl.question("Digite o ID do Cliente: ", (id) => {
         id = Number(id);
@@ -277,52 +272,46 @@ function atualizarCliente() {
             return;
         }
         rl.question("Digite um novo nome: ", (novoNome) => {
-            rl.question("Digite a novo cpf: ", (novocpf) => {
-                rl.question("Digite o novo telefone: ", (novaTelefone) => {
+            rl.question("Digite a novo cpf: ", (novoCpf) => {
+                rl.question("Digite o novo telefone: ", (novoTelefone) => {
 
-
-                    if (novoNome === "" || novocpf === "" || novaTelefone === "") {
+                    if (novoNome === "" || novoCpf === "" || novoTelefone === "") {
                         console.log("Todos os dados precisam ser preenchidos");
                         mostrarMenu();
                         return;
                     }
 
-                    aluno.nome = novaNome;
-                    aluno.cpf = novocpf;
-                    aluno.telefone = novaTelefone;
+                    cliente.nome = novoNome;
+                    cliente.cpf = novoCpf;
+                    cliente.telefone = novoTelefone;
 
                     console.log("atualizado com sucesso")
                     mostrarMenu();
-
-
-
                 })
             })
         })
     })
-
-
 }
 
 function buscarClientePorId() {
-    console.log("Buscar aluno por id");
+    console.log("Buscar cliente por id");
 
-    rl.question("Digite o ID do aluno: ", (id) => {
+    rl.question("Digite o ID do cliente: ", (id) => {
         id = Number(id);
 
-        let Cliente = encontrarClientePorId(id);
+        let cliente = encontrarClientePorId(id);
 
-        if (aluno === null) {
+        if (cliente === null) {
             console.log("Cliente não encontrado");
             mostrarMenu();
             return;
         }
 
         console.log("\nCliente Encontrado");
-        console.log("ID: " + clientes.id);
-        console.log("Nome: " + clientes.nome)
-        console.log("cpf: " + clientes.cpf)
-        console.log("Telefone: " + clientes.telefone)
+        console.log("ID: " + cliente.id);
+        console.log("Nome: " + cliente.nome)
+        console.log("cpf: " + cliente.cpf)
+        console.log("Telefone: " + cliente.telefone)
 
         mostrarMenu()
     })
@@ -334,57 +323,51 @@ function encontrarClientePorId(id) {
             return clientes[i];
         }
     }
-
     return null;
 }
-
 
 function ListarClientes() {
     console.log("Listar Clientes");
 
-    if (alunos.length === 0) {
+    if (clientes.length === 0) {
         console.log("Nenhum Cliente cadastrado");
         mostrarMenu();
         return;
     }
 
-    for (let i = 0; i < alunos.length; i++) {
+    for (let i = 0; i < clientes.length; i++) {
         console.log("\nID: " + clientes[i].id);
         console.log("Nome: " + clientes[i].nome)
         console.log("cpf: " + clientes[i].cpf)
-        console.log("Telefone: " + alunos[i].telefone)
+        console.log("Telefone: " + clientes[i].telefone)
     }
 
     mostrarMenu();
-
 }
 
 function removerCarro() {
 
     rl.question("Digite o id do Carro que quer remover; ", (id) => {
 
-        id = number(id)
+        id = Number(id)
 
-        for (let i = 0; i < alunos.length; i++) {
-
+        for (let i = 0; i < carros.length; i++) {
             if (carros[i].id === id) {
                 carros.splice(i, 1);
                 console.log("Carro removido com sucesso");
                 mostrarMenu();
                 return;
             }
-
         }
 
+        console.log("Carro nao encontrado");
+        mostrarMenu();
     })
-
-
-
 }
 
 function atualizarCarro() {
 
-    console.log(" Atualizar Carro");
+    console.log("Atualizar Carro");
 
     rl.question("Digite o ID do Carro: ", (id) => {
         id = Number(id);
@@ -400,17 +383,16 @@ function atualizarCarro() {
                 rl.question("Digite o novo ano: ", (novoAno) => {
                     rl.question("Digite o novo preço da diaria: ", (novaDiaria) => {
 
-                        novoModelo = Number(novoModelo);
                         novoAno = Number(novoAno);
                         novaDiaria = Number(novaDiaria);
 
-                        if (id === "" || modelo === "" || placa === "" || ano === "" || diaria === "") {
+                        if (novoModelo === "" || novaPlaca === "" || isNaN(novoAno) || isNaN(novaDiaria)) {
                             console.log("ERRO: Não preencheu todas as informaçoes");
                             mostrarMenu();
                             return;
                         }
 
-                        if (ano <= 0 || ano > 2026) {
+                        if (novoAno <= 0 || novoAno > 2026) {
                             console.log("ERRO: ano inválido");
                             mostrarMenu();
                             return;
@@ -418,22 +400,17 @@ function atualizarCarro() {
 
                         carro.modelo = novoModelo;
                         carro.placa = novaPlaca;
-                        carro.Ano = novaAno;
-                        carros.diaria = novaDiaria;
+                        carro.ano = novoAno;
+                        carro.preco_diaria = novaDiaria;
 
                         console.log("atualizado com sucesso")
                         mostrarMenu();
-
-
                     })
                 })
             })
         })
     })
 }
-
-
-
 
 function listarCarros() {
 
@@ -443,16 +420,15 @@ function listarCarros() {
         return;
     }
 
-    for (i = 0; i < carros.length; i--) {
-
+    for (let i = 0; i < carros.length; i++) {
         console.log("\nID: " + carros[i].id);
-        console.log("Nome: " + carros[i].modelo)
+        console.log("Modelo: " + carros[i].modelo)
         console.log("Ano: " + carros[i].ano)
         console.log("preco_diaria: " + carros[i].preco_diaria)
-        console.log("Disponibilidade: " + alunos[i].disponivel)
-
+        console.log("Disponibilidade: " + carros[i].diponivel)
     }
 
+    mostrarMenu();
 }
 
 function buscarCarroPorId() {
@@ -483,14 +459,12 @@ function buscarCarroPorId() {
 
 function encontrarCarroPorId(id) {
     for (let i = 0; i < carros.length; i++) {
-        if (Carros[i].id === id) {
+        if (carros[i].id === id) {
             return carros[i];
         }
     }
-
     return null;
 }
-
 
 function cadastrarCarro() {
 
@@ -500,16 +474,16 @@ function cadastrarCarro() {
                 rl.question("Digite o preço da diaria do carro que voce quer cadastrar; ", (diaria) => {
 
                     ano = Number(ano)
-                    preco_diaria = Number(diaria)
+                    let preco_diaria = Number(diaria)
 
-                    if (id === "" || modelo === "" || placa === "" || ano === "" || diaria === "") {
+                    if (modelo === "" || placa === "" || isNaN(ano) || isNaN(preco_diaria)) {
                         console.log("ERRO: Não preencheu todas as informaçoes");
                         mostrarMenu();
                         return;
                     }
 
-                    if (ano <= 0 || ano > 2026 || nota > 10) {
-                        console.log("ERRO: Idade ou nota inválida");
+                    if (ano <= 0 || ano > 2026) {
+                        console.log("ERRO: ano inválido");
                         mostrarMenu();
                         return;
                     }
@@ -517,6 +491,7 @@ function cadastrarCarro() {
                     let carro = {
                         id: proximoIdCarro,
                         modelo: modelo,
+                        placa: placa,
                         ano: ano,
                         preco_diaria: preco_diaria,
                         diponivel: true
@@ -524,23 +499,21 @@ function cadastrarCarro() {
 
                     carros.push(carro)
                     proximoIdCarro++
-
-
+                    console.log("Carro cadastrado com sucesso!")
+                    mostrarMenu();
                 })
             })
         })
     })
-
 }
 
 function cadastrarCliente() {
 
     console.log("Cadastrar Cliente");
 
-    rl.question("Digite o nome do Cliente: ", (cliente) => {
+    rl.question("Digite o nome do Cliente: ", (nome) => {
         rl.question("Digite o cpf do cliente: ", (cpf) => {
             rl.question("Digite o telefone do cliente: ", (telefone) => {
-
 
                 if (nome === "" || cpf === "" || telefone === "") {
                     console.log("ERRO: Não preencheu todas as infos");
@@ -548,12 +521,11 @@ function cadastrarCliente() {
                     return;
                 }
 
-
                 let cliente = {
                     id: proximoIdCliente,
                     nome: nome,
-                    cpf: cpf
-
+                    cpf: cpf,
+                    telefone: telefone
                 };
 
                 clientes.push(cliente);
@@ -561,9 +533,9 @@ function cadastrarCliente() {
 
                 console.log("Cliente Cadastrado com sucesso")
                 mostrarMenu();
-
             })
         })
     })
 }
-mostrarMenu;
+
+mostrarMenu();
